@@ -1,0 +1,35 @@
+spring:
+  mvc:
+    view:
+      prefix: /WEB-INF/view/
+      suffix: .jsp
+  datasource:
+    username: root
+    password: fb20021026
+    url: jdbc:mysql://@localhost:3306/online_ordering?useUnicode=true&characterEncoding=utf-8
+    driver-class-name: com.mysql.jdbc.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  devtools:
+    restart:
+#      enabled: false  # 修改这里
+server:
+  session:
+    timeout: 600
+  port: 8991
+  jsp-servlet:
+    init-parameters:
+      development: true
+logging:
+  level:
+    # 基本类型绑定
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    # 枚举类型绑定
+    org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter: trace
+onlineOrdering:
+  pageSize: 12
+#  adminUsers: admin
