@@ -1,0 +1,44 @@
+@startuml
+|员工|
+start
+:填写请假条;
+if (请假天数 ≤ 3天?) then (是)
+  :发送给直接上级审核;
+  |直接上级|
+  :审核请假条;
+  if (审核通过?) then (是)
+    :批准请假;
+    stop
+  else (否)
+    :驳回请假申请;
+    stop
+  endif
+else (否)
+  :发送给直接上级审核;
+  |直接上级|
+  :审核请假条;
+  if (审核通过?) then (是)
+    :发送给总监审核;
+    |总监|
+    :审核请假条;
+    if (审核通过?) then (是)
+      :发送给人事审核;
+      |人事|
+      :审核请假条;
+      if (审核通过?) then (是)
+        :批准请假;
+        stop
+      else (否)
+        :驳回请假申请;
+        stop
+      endif
+    else (否)
+      :驳回请假申请;
+      stop
+    endif
+  else (否)
+    :驳回请假申请;
+    stop
+  endif
+endif
+@enduml
