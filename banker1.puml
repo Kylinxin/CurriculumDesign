@@ -1,0 +1,26 @@
+@startuml
+
+actor "个人用户" as IndividualUser
+actor "企业用户" as CorporateUser
+
+rectangle "银行 App" {
+    usecase "转账" as Transfer
+    usecase "查询余额" as CheckBalance
+    usecase "理财" as FinancialManagement
+    usecase "贷款" as Loan
+
+    IndividualUser --> Transfer : "执行"
+    IndividualUser --> CheckBalance : "执行"
+    IndividualUser --> FinancialManagement : "执行"
+    IndividualUser --> Loan : "申请"
+
+    CorporateUser --> Transfer : "执行"
+    CorporateUser --> CheckBalance : "执行"
+    CorporateUser --> FinancialManagement : "执行"
+    CorporateUser --> Loan : "申请"
+
+    Transfer .> "(超限提示)" : "当超过限额时"
+    Loan .> "(资产评估)" : "在申请贷款之前"
+}
+
+@enduml
