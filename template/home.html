@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>非凡聊天室</title>
+    <!-- 包含 Vue 3 -->
+    <script src="https://unpkg.com/vue@next"></script>
+    <!-- 包含 Ant Design Vue 组件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ant-design-vue/2.2.7/antd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/ant-design-vue/2.2.7/antd.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: url('https://api.zzzmh.cn/v2/bz/v3/getUrl/127f2bf2880511ebb6edd017c2d2eca229') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+        
+        #emoji-picker-container {
+            position: relative;
+        }
+        
+        #emoji-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 50px;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .msg-list {
+            height: 530px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            background-color: #f3f3f3;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message .meta {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .message .author {
+            color: #555;
+            font-weight: bold;
+        }
+        
+        .myself {
+            background-color: #ece6ff !important;
+            align-self: flex-end;
+        }
+        
+        .myself .meta {
+            color: #2b2b2b;
+        }
+        
+        .system {
+            background-color: #e0e0e0;
+            color: #000;
+            align-self: center;
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .user-list,
+        .file-list {
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+        }
+        
+        .user-list .user,
+        .file-list .file {
+            background-color: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-input {
+            margin: 10px 0;
+        }
+        
+        .usertip {
+            color: red;
+        }
+        
+        .form-inline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .form-inline .input-group {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 10px;
+        }
+        
+        .form-inline input[type="submit"] {
+            width: 100%;
+            max-width: 150px;
+            margin: 5px 0;
+        }
+        
+        .btn-primary {
+            background-color: #00bef8;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #00bef8;
+        }
+        
+        textarea {
+            resize: none;
+        }
+        
+        @media (min-width: 768px) {
+            .form-inline {
+                flex-direction: row;
+            }
+            .form-inline .input-group,
+            .form-inline input[type="submit"] {
+                margin: 0 5px;
+                margin-bottom: 0;
+            }
+        }
+        
+        .centered {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .row-flex {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .d-flex {
+            display: flex;
+        }
+        
+        .align-items-stretch {
+            align-items: stretch;
+        }
+        
+        .full-height {
+            height: 100%;
+        }
+        
+        .equal-height {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .highlight {
+            background-color: #00d9ff;
+            /* 这是背景色，你可以根据需要更改 */
+            padding: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="app">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header text-center">
+                    <h2>Welcome to extraordinary chatroom</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row d-flex align-items-stretch">
+            <div class="col-md-9 equal-height">
+                <div class="highlight">聊天内容</div>
+                <div class="msg-list" id="msg-list">
+                    <div class="message" v-for="msg in msglist" :class="{ system: msg.type > 0, myself: msg.user.nickname == curUser.nickname }">
+                        <div class="meta" v-if="msg.type == 0">
+                            <span class="author">${ msg.user.nickname }</span> at ${ formatDate(msg.msg_time) } ${ calc(msg) }
+                        </div>
+                        <div>
+                            <span class="content" style="white-space: pre-wrap;">${ msg.content }</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 equal-height">
+                <div class="row equal-height">
+                    <div class="col-md-12">
+                        <div class="highlight">当前在线用户数：
+                            <font color="red">${ onlineUserNum }</font>
+                        </div>
+                        <div class="user-list">
+                            <div class="user" v-for="user in users">
+                                用户：@${ user.nickname } 加入时间：${ formatDate(user.enter_at) }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="highlight">已上传文件：</div>
+                        <div class="file-list">
+                            <div class="file" v-for="filename in uploadedFiles">
+                                <a :href="'/download?filename=' + filename" :download="filename">${ filename }</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 昵称和发送 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="user-input">
+                    <div class="usertip text-center">${ usertip }</div>
+                    <div class="form-inline has-success text-center centered">
+                        <div class="input-group">
+                            <span class="input-group-addon">您的昵称</span>
+                            <input type="text" v-model="curUser.nickname" :disabled="joined" class="form-control" aria-describedby="inputGroupSuccess1Status">
+                        </div>
+                        <input type="submit" class="form-control btn-primary text-center" @click="leavechat" v-if="joined" value="离开聊天室">
+                        <input type="submit" class="form-control btn-primary text-center" @click="joinchat" v-else="joined" value="进入聊天室">
+                    </div>
+                    <div class="form-inline centered">
+                        <input type="file" id="fileInput" class="form-control">
+                        <button @click="uploadFile" class="btn btn-primary">上传文件</button>
+                    </div>
+
+                    <div id="emoji-picker-container">
+                        <emoji-picker id="emoji-picker" style="display: none;"></emoji-picker>
+                    </div>
+                    <button id="emoji-button">😆</button>
+                    <!-- <button>Click me</button>
+                    <div class="tooltip" role="tooltip">
+                        
+                    </div> -->
+                    <textarea id="chat-content" rows="3" class="form-control" v-model="content" @keydown.enter.prevent.exact="sendChatContent" @keydown.meta.enter="lineFeed" @keydown.ctrl.enter="lineFeed" placeholder="在此输入聊天内容。ctrl/command+enter 换行，enter 发送"></textarea>
+                    <input type="button" value="发送(Enter)" class="btn btn-primary form-control" @click="sendChatContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script type="text/javascript">
+        let gWS;
+        let app = new Vue({
+            el: '#app',
+            data: {
+                uploadedFiles: [],
+                msglist: [],
+                content: "",
+                curUser: {
+                    uid: 0,
+                    nickname: '',
+                    token: '',
+                },
+                usertip: "当前还未进入聊天室，请在下方「填上您的昵称」",
+
+                // 是否已经加入聊天室
+                joined: false,
+
+                users: [],
+                indexMap: {},
+            },
+            mounted: function() {
+                let user = localStorage.getItem("user");
+                if (user) {
+                    this.curUser = JSON.parse(user);
+                    this.joinchat();
+                }
+
+                setInterval(this.keepAlive, 10000);
+            },
+            computed: {
+                onlineUserNum: function() {
+                    return this.users.length;
+                },
+            },
+            methods: {
+                joinchat: function() {
+                    let that = this;
+
+                    if (this.curUser.nickname == "") {
+                        this.usertip = "昵称不能为空";
+                        return;
+                    }
+
+                    this.usertip = "";
+                    this.joined = true;
+
+                    if ("WebSocket" in window) {
+                        let host = location.host;
+                        // 打开一个 websocket 连接
+                        gWS = new WebSocket("ws://" + host + "/ws?nickname=" + this.curUser.nickname + "&token=" + this.curUser.token);
+                        // alert(this.curUser.token)
+                        gWS.onopen = function() {
+                            that.msglist.splice(0);
+
+                            that.addMsg2List({
+                                user: {
+                                    nickname: ""
+                                },
+                                type: 1,
+                                content: '成功进入聊天室！欢迎你，' + that.curUser.nickname,
+                            });
+                        };
+
+                        gWS.onmessage = function(evt) {
+                            let data = JSON.parse(evt.data);
+                            if (data.type == 5) {
+                                // alert(evt.data)
+                                that.uploadedFiles.push(data.Filename)
+                            } else if (data.type == 4) {
+                                that.usertip = data.content;
+                                that.joined = false;
+                                return;
+                            } else if (data.type == 1) {
+                                // 欢迎消息
+                                that.curUser = data.user;
+                                localStorage.setItem('user', JSON.stringify(data.user));
+
+                                data.user = {
+                                    nickname: '',
+                                    uid: 0
+                                };
+
+                                that.fetchUserList();
+                            } else if (data.type == 2) {
+                                // 某个用户进入
+                                let user = data.user;
+                                let len = that.users.length;
+                                that.users.push(user);
+                                that.indexMap[user.nickname] = len;
+                            } else if (data.type == 3) {
+                                // 某个用户退出
+                                let nickname = data.user.nickname;
+                                let idx = that.indexMap[nickname];
+
+                                that.users.splice(idx, 1);
+
+                                for (let i = idx; i < that.users.length; i++) {
+                                    let nickname = that.users[i].nickname;
+                                    that.indexMap[nickname] = i;
+                                }
+                            }
+                            that.addMsg2List(data);
+                        };
+
+                        gWS.onerror = function(evt) {
+                            console.log("发生错误：");
+                            console.log(evt);
+                        };
+
+                        gWS.onclose = function() {
+                            console.log("连接已关闭")
+                        };
+
+                    } else {
+                        alert("您的浏览器不支持 WebSocket!");
+                    }
+                },
+                leavechat: function() {
+                    gWS.close();
+
+                    this.msglist.splice(0);
+
+                    this.addMsg2List({
+                        user: {
+                            nickname: ""
+                        },
+                        type: 1,
+                        content: '您已离开聊天室，再见！',
+                    });
+
+                    this.users.splice(0);
+
+                    this.joined = false;
+                },
+                sendChatContent: function() {
+                    if (!this.content) {
+                        return;
+                    }
+                    let msg = JSON.stringify({
+                        "content": this.content
+                    });
+                    gWS.send(msg);
+
+                    let data = {
+                        user: {
+                            nickname: this.curUser.nickname,
+                            uid: this.curUser.uid,
+                        },
+                        type: 0,
+                        content: this.content,
+                        msg_time: new Date().getTime(),
+                    };
+
+                    this.addMsg2List(data);
+                    this.content = "";
+                },
+                fetchUserList: function() {
+                    let that = this;
+                    // XMLHttpRequest对象用于在后台与服务器交换数据
+                    var xhr = new XMLHttpRequest();
+                    //每当readyState改变时就会触发onreadystatechange函数
+                    //0: 请求未初始化
+                    //1: 服务器连接已建立
+                    //2: 请求已接收
+                    //3: 请求处理中
+                    //4: 请求已完成，且响应已就绪
+                    xhr.open('GET', '/user_list', true)
+                    xhr.onreadystatechange = function() {
+                        //readyStatus == 4说明请求已经完成
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            that.users.splice(0);
+                            let users = JSON.parse(xhr.responseText);
+                            for (let i in users) {
+                                let user = users[i];
+                                that.indexMap[user.nickname] = that.users.length;
+                                that.users.push(user);
+                            }
+                        }
+                    };
+                    //发送数据
+                    xhr.send();
+                },
+                // 换行
+                lineFeed: function(evt) {
+                    this.content = this.content + '\n';
+                },
+                formatDate: function(dateStr) {
+                    let d = new Date(dateStr);
+                    return d.toLocaleString();
+                },
+                calc: function(msg) {
+                    if (typeof msg.client_send_time == "undefined") {
+                        return '';
+                    }
+
+                    let send = new Date(msg.client_send_time)
+                    if (send.getFullYear() == 1) {
+                        return '';
+                    }
+
+                    let elaspe = msg.receive_time.getTime() - send.getTime();
+                    return "耗时 " + elaspe + "ms";
+                },
+
+                addMsg2List: function(data) {
+                    if (data.content == "") {
+                        return;
+                    }
+
+                    let that = this;
+                    if (data.ats != null) {
+                        data.ats.forEach(function(nickname) {
+                            if (nickname == '@' + that.nickname) {
+                                that.usertip = '有人 @ 你了';
+                            }
+                        })
+                    }
+
+                    data.receive_time = new Date();
+
+                    if (this.msglist.length > 80) {
+                        this.msglist.splice(0, 40);
+                    }
+
+                    this.msglist.push(data);
+
+                    Vue.nextTick(function() {
+                        let msgList = document.querySelector('#msg-list');
+                        msgList.scrollTop = msgList.scrollHeight;
+                    })
+
+                    setTimeout(function() {
+                        that.usertip = '';
+                    }, 5000);
+                },
+
+                uploadFile() {
+                    let input = document.getElementById('fileInput');
+
+                    // 确保用户选择了一个文件
+                    if (!input.files || !input.files.length) {
+                        return alert('请选择一个文件上传。');
+                    }
+
+                    let file = input.files[0];
+
+                    // 检查文件扩展名
+                    let ext = file.name.split('.').pop().toLowerCase();
+                    if (ext != "txt" && ext != "pdf") {
+                        return alert('不支持的文件类型。');
+                    }
+                    let nickname = this.curUser.nickname;
+                    let originFileName = file.name;
+                    let newFileName = this.curUser.nickname + "_" + originFileName;
+
+                    let token = this.curUser.token;
+                    let formData = new FormData();
+
+                    formData.append('file', file);
+
+                    let request = new XMLHttpRequest();
+                    request.open('POST', window.location.origin + '/upload', true);
+                    request.setRequestHeader('Authorization', 'Bearer ' + token);
+
+                    request.onload = function() {
+                        if (request.status === 200) {
+                            document.getElementById('fileInput').value = '';
+                            console.log(request.responseText);
+                            alert('文件上传成功');
+                        } else {
+                            console.error(request.responseText);
+                        }
+                    };
+
+                    request.send(formData);
+                },
+                // 保活
+                keepAlive: function() {
+                    if (gWS.readyState == WebSocket.CLOSED && this.joined) {
+                        console.log("reconnect");
+                        this.joinchat();
+                    }
+                },
+            },
+            delimiters: ['${', '}']
+        })
+    </script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+    <script>
+        let emojiButton = document.getElementById('emoji-button');
+        let emojiPicker = document.getElementById('emoji-picker');
+        let chatContent = document.getElementById('chat-content');
+
+        // 当点击按钮时，显示或隐藏emoji选择器
+        emojiButton.addEventListener('click', function() {
+            if (emojiPicker.style.display === 'none') {
+                emojiPicker.style.display = 'block';
+            } else {
+                emojiPicker.style.display = 'none';
+            }
+        });
+
+        // 当选择一个emoji时，将其添加到输入框中，并隐藏emoji选择器
+        emojiPicker.addEventListener('emoji-click', function(event) {
+            chatContent.value += event.detail.unicode;
+            emojiPicker.style.display = 'none';
+        });
+    </script>
+
+</body>
+
+</html>
